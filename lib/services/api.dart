@@ -6,7 +6,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Global API key to use across the app. Leave empty to use env/secure storage.
-const String kGlobalGeminiApiKey = 'AIzaSyDwbFU59nghnDd2Db-h7Uwqaq7Erg2O888';
+const String kGlobalGeminiApiKey = ' YOUR API KEY ';
 
 /// Mode of scanning – normal identification or disease diagnosis.
 enum ScanMode { identify, diagnose }
