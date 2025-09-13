@@ -72,7 +72,7 @@ Future<void> main() async {
   // Load saved theme preference before building the app
   themeModeNotifier.value = await ThemePrefs.load();
   // Load persisted language preference
-  LanguagePrefs.load();
+  // LanguagePrefs.load(); // Disabled: always default to English on startup
   runApp(const MyApp());
 }
 
@@ -144,7 +144,7 @@ class _RootShellState extends State<RootShell> {
               tooltip: 'Language: $lang',
               onSelected: (value) async {
                 languageNotifier.value = value;
-                await LanguagePrefs.save(value);
+                // await LanguagePrefs.save(value); // Disabled: do not persist language
               },
               itemBuilder: (context) => const [
                 PopupMenuItem(value: 'English', child: Text('English')),
@@ -1520,3 +1520,4 @@ class _GlassCard extends StatelessWidget {
     );
   }
 }
+
