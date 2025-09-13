@@ -137,25 +137,6 @@ class _RootShellState extends State<RootShell> {
       appBar: AppBar(
         title: const Text('Plant Scanner'),
         actions: [
-          // Language selection menu
-          ValueListenableBuilder<String>(
-            valueListenable: languageNotifier,
-            builder: (context, lang, _) => PopupMenuButton<String>(
-              tooltip: 'Language: $lang',
-              onSelected: (value) async {
-                languageNotifier.value = value;
-                // await LanguagePrefs.save(value); // Disabled: do not persist language
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'English', child: Text('English')),
-                PopupMenuItem(value: 'Hindi', child: Text('Hindi')),
-                PopupMenuItem(value: 'Spanish', child: Text('Spanish')),
-                PopupMenuItem(value: 'French', child: Text('French')),
-                PopupMenuItem(value: 'German', child: Text('German')),
-              ],
-              icon: const Icon(Icons.translate),
-            ),
-          ),
           PopupMenuButton<String>(
             tooltip: 'Theme',
             onSelected: (value) async {
@@ -253,7 +234,7 @@ class __HomePageState extends State<_HomePage> {
       final result = await service.identifyPlant(
         bytes,
         imagePath: image.path,
-        languageName: languageNotifier.value,
+        languageName: 'English',
       );
       await widget.historyRepository.add(result);
       if (!mounted) return;
@@ -298,7 +279,7 @@ class __HomePageState extends State<_HomePage> {
       final result = await service.identifyPlant(
         bytes,
         imagePath: image.path,
-        languageName: languageNotifier.value,
+        languageName: 'English',
       );
       await widget.historyRepository.add(result);
       if (!mounted) return;
@@ -354,26 +335,6 @@ class __HomePageState extends State<_HomePage> {
               return updated.isFavorite;
             }
             return result.isFavorite;
-          },
-          onTranslate: (newSummary) async {
-            final idx = widget.historyRepository.items.indexWhere(
-              (e) =>
-                  e.timestamp == result.timestamp &&
-                  e.imagePath == result.imagePath,
-            );
-            if (idx != -1) {
-              final current = widget.historyRepository.items[idx];
-              widget.historyRepository.items[idx] = PlantScanResult(
-                plantName: current.plantName,
-                summary: newSummary,
-                timestamp: current.timestamp,
-                imagePath: current.imagePath,
-                isFavorite: current.isFavorite,
-                tags: current.tags,
-              );
-              await widget.historyRepository.save();
-              setState(() {});
-            }
           },
         ),
       ),
@@ -635,21 +596,6 @@ class __HomePageState extends State<_HomePage> {
                                       widget.historyRepository.save();
                                       setState(() {});
                                       return updated.isFavorite;
-                                    },
-                                    onTranslate: (newSummary) async {
-                                      final current =
-                                          widget.historyRepository.items[index];
-                                      widget.historyRepository.items[index] =
-                                          PlantScanResult(
-                                            plantName: current.plantName,
-                                            summary: newSummary,
-                                            timestamp: current.timestamp,
-                                            imagePath: current.imagePath,
-                                            isFavorite: current.isFavorite,
-                                            tags: current.tags,
-                                          );
-                                      await widget.historyRepository.save();
-                                      setState(() {});
                                     },
                                   ),
                                 ),
@@ -1071,19 +1017,6 @@ class _HistoryList extends StatelessWidget {
                         onChanged?.call();
                         return updated.isFavorite;
                       },
-                      onTranslate: (newSummary) async {
-                        final current = historyRepository.items[index];
-                        historyRepository.items[index] = PlantScanResult(
-                          plantName: current.plantName,
-                          summary: newSummary,
-                          timestamp: current.timestamp,
-                          imagePath: current.imagePath,
-                          isFavorite: current.isFavorite,
-                          tags: current.tags,
-                        );
-                        await historyRepository.save();
-                        onChanged?.call();
-                      },
                     ),
                   ),
                 );
@@ -1109,13 +1042,11 @@ class _ResultView extends StatefulWidget {
     required this.result,
     required this.scrollController,
     this.onToggleFavorite,
-    this.onTranslate,
   });
 
   final PlantScanResult result;
   final ScrollController scrollController;
   final bool Function()? onToggleFavorite;
-  final Future<void> Function(String newSummary)? onTranslate;
 
   @override
   State<_ResultView> createState() => _ResultViewState();
@@ -1124,7 +1055,6 @@ class _ResultView extends StatefulWidget {
 class _ResultViewState extends State<_ResultView> {
   late bool _fav;
   late String _summary; // locally updated (e.g., after translate)
-  bool _translating = false;
 
   @override
   void initState() {
@@ -1202,69 +1132,6 @@ class _ResultViewState extends State<_ResultView> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-                ValueListenableBuilder<String>(
-                  valueListenable: languageNotifier,
-                  builder: (context, lang, _) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      lang,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: _translating
-                      ? 'Translating…'
-                      : 'Translate to ${languageNotifier.value}',
-                  icon: _translating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.translate),
-                  onPressed: _translating
-                      ? null
-                      : () async {
-                          try {
-                            setState(() => _translating = true);
-                            final svc = GeminiService();
-                            final newSummary = await svc.translateSummary(
-                              _summary,
-                              languageNotifier.value,
-                            );
-                            // Persist change via callback if provided
-                            if (widget.onTranslate != null) {
-                              await widget.onTranslate!(newSummary);
-                            }
-                            setState(() => _summary = newSummary);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Translated to ${languageNotifier.value}',
-                                  ),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Translate failed: $e')),
-                              );
-                            }
-                          } finally {
-                            if (mounted) setState(() => _translating = false);
-                          }
-                        },
                 ),
                 IconButton(
                   tooltip: 'Share',
@@ -1520,4 +1387,3 @@ class _GlassCard extends StatelessWidget {
     );
   }
 }
-
