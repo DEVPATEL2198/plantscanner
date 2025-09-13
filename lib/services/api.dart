@@ -6,7 +6,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Global API key to use across the app. Leave empty to use env/secure storage.
-const String kGlobalGeminiApiKey = ' YOUR API KEY ';
+const String kGlobalGeminiApiKey = 'AIzaSyDwbFU59nghnDd2Db-h7Uwqaq7Erg2O888';
 
 /// Mode of scanning – normal identification or disease diagnosis.
 enum ScanMode { identify, diagnose }
@@ -70,7 +70,7 @@ class GeminiService {
   Future<PlantScanResult> identifyPlant(
     List<int> imageBytes, {
     String? imagePath,
-    String languageName = 'English',
+    String languageName = 'English', // ignored; always force English
     ScanMode mode = ScanMode.identify,
   }) async {
     final model = GenerativeModel(
@@ -82,30 +82,30 @@ class GeminiService {
     final prompt = mode == ScanMode.identify
         ? TextPart(
             'You are a plant identification assistant. Given an image of a plant, identify the most likely common name and scientific name. Then provide concise growing guidance.\n\n'
-            'Respond fully in "$languageName" (use only that language in your wording).\n'
-            'IMPORTANT: Keep the labels EXACTLY in English as specified below, but translate all field VALUES (and Tips) to the target language.\n\n'
+            'Respond fully in English (use only English in your wording).\n'
+            'IMPORTANT: Keep the labels EXACTLY in English as specified below, and write all field VALUES (and Tips) in English.\n\n'
             'Respond in this exact labeled format (one field per line):\n'
-            'Name: <common name in target language> (<scientific name, Latin>)\n'
-            'Light: <brief guidance in target language>\n'
-            'Water: <brief guidance in target language>\n'
-            'Soil: <brief guidance in target language>\n'
-            'Temperature: <brief guidance in target language>\n'
-            'Humidity: <optional, brief in target language>\n'
-            'Fertilizer: <optional, brief in target language>\n'
-            'Tips: <bullet-like short tips separated by semicolons in target language>',
+            'Name: <common name in English> (<scientific name, Latin>)\n'
+            'Light: <brief guidance in English>\n'
+            'Water: <brief guidance in English>\n'
+            'Soil: <brief guidance in English>\n'
+            'Temperature: <brief guidance in English>\n'
+            'Humidity: <optional, brief in English>\n'
+            'Fertilizer: <optional, brief in English>\n'
+            'Tips: <bullet-like short tips separated by semicolons in English>',
           )
         : TextPart(
             'You are a plant disease diagnosis assistant. Given an image of a plant, identify any likely diseases or issues (fungal, bacterial, pest, nutrient deficiency, environmental stress) and provide actionable treatment and prevention steps.\n\n'
-            'Respond fully in "$languageName" (use only that language in your wording).\n'
-            'IMPORTANT: Keep the labels EXACTLY in English as specified below, but translate all field VALUES (and Tips) to the target language.\n\n'
+            'Respond fully in English (use only English in your wording).\n'
+            'IMPORTANT: Keep the labels EXACTLY in English as specified below, and write all field VALUES (and Tips) in English.\n\n'
             'Respond in this exact labeled format (one field per line):\n'
-            'Disease: <likely disease or issue in target language>\n'
-            'Cause: <brief cause in target language>\n'
-            'Symptoms: <key visible symptoms in target language>\n'
-            'Severity: <low/medium/high in target language>\n'
-            'Treatment: <concise, safe treatment steps in target language>\n'
-            'Prevention: <concise prevention steps in target language>\n'
-            'Tips: <short bullet-like tips separated by semicolons in target language>',
+            'Disease: <likely disease or issue in English>\n'
+            'Cause: <brief cause in English>\n'
+            'Symptoms: <key visible symptoms in English>\n'
+            'Severity: <low/medium/high in English>\n'
+            'Treatment: <concise, safe treatment steps in English>\n'
+            'Prevention: <concise prevention steps in English>\n'
+            'Tips: <short bullet-like tips separated by semicolons in English>',
           );
 
     final content = Content.multi([
